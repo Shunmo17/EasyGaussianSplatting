@@ -5,3 +5,5 @@ pyqtgraph
 pyopengl
 plyfile
 faiss-cpu
+torch
+torchvision
