@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import torch.optim as optim
 import matplotlib.pyplot as plt
+from torch.utils.tensorboard import SummaryWriter
 from gsplat.pytorch_ssim import gau_loss
 from gsplat.gau_io import *
 from gsplat.gausplat_dataset import *
@@ -10,12 +11,13 @@ from gsplat.gsmodel import *
 
 torch.autograd.set_detect_anomaly(True)
 
-
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--path", help="the path of dataset")
     args = parser.parse_args()
+
+    writer = SummaryWriter(log_dir="logs")
 
     if args.path:
         print("Try to training %s ..." % args.path)
@@ -37,7 +39,7 @@ if __name__ == "__main__":
         np.zeros(shape=(cam0.height, cam0.width, 3), dtype=np.uint8))
     txt = ax.text(50, 50, "", size=20, color='white')
 
-    epochs = 100
+    epochs = 300
     n = len(gs_set)
     model = GSModel(gs_set.sence_size, len(gs_set) * epochs)
 
@@ -63,10 +65,13 @@ if __name__ == "__main__":
                 img.set_data(np.clip(image.detach().permute(
                     1, 2, 0).to('cpu').numpy(), 0, 1))
                 txt._text = "epoch %d" % epoch
+                plt.savefig('data/img_epoch%05d.png' % epoch)
                 plt.pause(0.1)
 
         avg_loss = avg_loss / n
         print("epoch:%d avg_loss:%f" % (epoch, avg_loss))
+        writer.add_scalar("Loss/train", avg_loss, epoch)
+
         with torch.no_grad():
             if (epoch > 1 and epoch <= 50):
                 if (epoch % 5 == 0):
@@ -82,3 +87,4 @@ if __name__ == "__main__":
 
     save_training_params('data/final.npy', training_params)
     print("Training is finished.")
+    writer.close()

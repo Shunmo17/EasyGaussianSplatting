@@ -7,3 +7,4 @@ plyfile
 faiss-cpu
 torch
 torchvision
+tensorboard
